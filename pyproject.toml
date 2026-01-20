@@ -14,4 +14,9 @@ dependencies = [
     "accelerate>=0.25.0",
     "sacremoses>=0.0.53",
     "huggingface-hub>=0.20.0",
+    "uvicorn>=0.40.0",
+    "fastapi>=0.128.0",
+    "sqlalchemy>=2.0.45",
+    "selenium>=4.40.0",
+    "webdriver-manager>=4.0.2",
 ]
