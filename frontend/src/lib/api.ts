@@ -65,6 +65,12 @@ export const ingestApi = {
     const { data } = await api.post('/api/ingest/youtube', payload)
     return data
   },
+  reddit: async (postUrl: string) => {
+    const { data } = await api.post('/api/ingest/reddit', null, {
+      params: { post_url: postUrl },
+    })
+    return data
+  },
 }
 
 export const processApi = {

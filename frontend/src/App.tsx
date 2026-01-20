@@ -144,6 +144,7 @@ function App() {
   const [location, setLocation] = useState('')
   const [maxComments, setMaxComments] = useState(50)
   const [processLimit, setProcessLimit] = useState(20)
+  const [redditUrl, setRedditUrl] = useState('')
 
   const { data: summary, isLoading: summaryLoading } = useQuery<Summary>({
     queryKey: ['analytics', 'summary'],
@@ -211,6 +212,17 @@ function App() {
     onError: (err: Error) => toast.error(err.message || 'Ingestion failed'),
   })
 
+  const redditMutation = useMutation({
+    mutationFn: (url: string) => ingestApi.reddit(url),
+    onSuccess: (data) => {
+      toast.success(`Ingested comments from Reddit post`)
+      setRedditUrl('')
+      queryClient.invalidateQueries({ queryKey: ['content'] })
+      queryClient.invalidateQueries({ queryKey: ['analytics'] })
+    },
+    onError: (err: Error) => toast.error(err.message || 'Reddit ingestion failed'),
+  })
+
   const processMutation = useMutation({
     mutationFn: (limit: number) => processApi.run(limit),
     onSuccess: (data) => {
@@ -232,6 +244,15 @@ function App() {
       location_name: location || undefined,
       max_comments: maxComments,
     })
+  }
+
+  const handleRedditIngest = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!redditUrl) {
+      toast.error('Add a Reddit post URL')
+      return
+    }
+    redditMutation.mutate(redditUrl)
   }
 
   const handleProcess = () => {
@@ -676,6 +697,33 @@ function App() {
                     setLocation('')
                     setMaxComments(50)
                   }}
+                >
+                  Reset
+                </Button>
+              </div>
+            </form>
+          </Card>
+
+          <Card title="Ingest Reddit comments" subtitle="Pull comments from Reddit posts">
+            <form className="grid gap-3" onSubmit={handleRedditIngest}>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs uppercase tracking-wide text-slate-600">Reddit Post URL</label>
+                <input
+                  value={redditUrl}
+                  onChange={(e) => setRedditUrl(e.target.value)}
+                  placeholder="https://www.reddit.com/r/subreddit/comments/..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 hover:border-slate-300"
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button type="submit" loading={redditMutation.isPending}>
+                  Ingest now
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setRedditUrl('')}
                 >
                   Reset
                 </Button>
