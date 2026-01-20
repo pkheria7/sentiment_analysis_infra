@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/process", tags=["LLM Processing"])
 def run_llm_processing(
     db: Session = Depends(get_db)
 ):
-    process_unprocessed_content(db)
+    status = process_unprocessed_content(db)
     return {
-        "status": "completed"
+        "status": status
     }
