@@ -1,7 +1,7 @@
 import json
 from google import genai
 from google.genai import types
-from app.services.llm.prompts import SYSTEM_PROMPT, build_user_prompt
+from app.services.llm.prompts import SYSTEM_PROMPT, build_user_prompt, SYSTEM_PROMPT_SUMMARISE, build_user_prompt_summarise
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -20,6 +20,25 @@ def analyze_batch_with_llm(texts: list[str]) -> list[dict] | None:
                 response_mime_type="application/json"
             ),
             contents=build_user_prompt(texts)
+        )
+
+        return json.loads(response.text)
+
+    except Exception as e:
+        print(f"Error calling Gemini: {e}")
+        return None
+
+
+def summarise_negative_comments(texts: list[str]) -> list[dict] | None:
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT_SUMMARISE,
+                temperature=0.2,
+                response_mime_type="application/json"
+            ),
+            contents=build_user_prompt_summarise(texts)
         )
 
         return json.loads(response.text)

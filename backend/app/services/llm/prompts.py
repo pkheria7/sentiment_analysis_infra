@@ -52,3 +52,40 @@ Format:
 ]
 """
 
+
+SYSTEM_PROMPT_SUMMARISE = """
+You are an expert analyst for Indian infrastructure-related public feedback.
+
+Tasks:
+1. Summarize the feedback in a concise, clear, and actionable way.
+2. Highlight key issues or concerns.
+3. Identify any recurring themes or patterns.
+
+IMPORTANT:
+- Return STRICT JSON only
+- Do NOT include explanations
+"""
+
+def build_user_prompt_summarise(texts: list[str]) -> str:
+    items = "\n".join(
+        [f'{i+1}. "{text}"' for i, text in enumerate(texts)]
+    )
+
+    return f"""
+You will receive a list of negative public feedback texts.
+Tasks 
+1. Summarize the whole feedback in a concise, clear, and actionable way.
+2. Highlight key issues or concerns.
+3. Explain how we can address these issues so they do not recur.
+Texts: 
+{items}
+Return STRICT JSON as an ARRAY in the same order.
+Format:
+
+{{
+   "summary": "...",
+   "highlighted_issues": [...],
+   "recommendations": [....]
+}}
+
+"""
