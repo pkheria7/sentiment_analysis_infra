@@ -8,11 +8,9 @@ router = APIRouter(prefix="/api/process", tags=["LLM Processing"])
 
 @router.post("")
 def run_llm_processing(
-    limit: int = 20,
     db: Session = Depends(get_db)
 ):
-    process_unprocessed_content(db, limit)
+    process_unprocessed_content(db)
     return {
-        "status": "completed",
-        "processed_records": limit
+        "status": "completed"
     }
