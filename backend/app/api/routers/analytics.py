@@ -128,7 +128,9 @@ def content_table(
         {
             "id": r.id,
             "source": r.source,
+            "source_ref": r.source_ref,
             "original_text": r.original_text,
+            "original_language": r.original_language,
             "translated_text": r.translated_text,
             "sentiment": r.sentiment,
             "aspect": r.aspect,
