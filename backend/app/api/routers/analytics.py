@@ -106,6 +106,7 @@ def content_table(
     sentiment: str | None = None,
     aspect: str | None = None,
     source: str | None = None,
+    category: str | None = None,
     limit: int = 50,
     offset: int = 0,
     db: Session = Depends(get_db)
@@ -118,6 +119,8 @@ def content_table(
         query = query.filter(Content.aspect == aspect)
     if source:
         query = query.filter(Content.source == source)
+    if category:
+        query = query.filter(Content.category == category)
 
     rows = query.order_by(Content.created_at.desc()).limit(limit).offset(offset).all()
 
@@ -129,12 +132,26 @@ def content_table(
             "translated_text": r.translated_text,
             "sentiment": r.sentiment,
             "aspect": r.aspect,
+            "category": r.category,
+            "confidence_score": r.confidence_score,
             "language": r.original_language,
             "timestamp": r.timestamp,
             "location": r.location_name,
         }
         for r in rows
     ]
+
+
+@router.get("/categories")
+def category_distribution(db: Session = Depends(get_db)):
+    data = (
+        db.query(Content.category, func.count(Content.id))
+        .filter(Content.is_processed == True)
+        .group_by(Content.category)
+        .all()
+    )
+
+    return [{"category": k, "count": v} for k, v in data]
 
 
 @router.get("/positive-locations")

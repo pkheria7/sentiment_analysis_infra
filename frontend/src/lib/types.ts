@@ -15,6 +15,11 @@ export interface AspectItem {
   count: number
 }
 
+export interface CategoryItem {
+  category: string
+  count: number
+}
+
 export interface SourceItem {
   source: string
   count: number
@@ -31,7 +36,8 @@ export interface TrendPoint {
 }
 
 export interface LocationSentimentPoint {
-  location: string
+  location?: string
+  aspect?: string
   count: number
 }
 
@@ -43,6 +49,8 @@ export interface ContentRow {
   translated_text?: string | null
   sentiment?: string | null
   aspect?: string | null
+  category?: string | null
+  confidence_score?: number | null
   language?: string | null
   timestamp?: string | null
   location?: string | null
@@ -52,6 +60,10 @@ export interface ContentFilters {
   sentiment?: string
   aspect?: string
   source?: string
+  category?: string
+  language?: string
+  start_date?: string
+  end_date?: string
   limit?: number
   offset?: number
 }

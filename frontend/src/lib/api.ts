@@ -1,6 +1,7 @@
 import axios from 'axios'
 import type {
   AspectItem,
+  CategoryItem,
   ContentFilters,
   ContentRow,
   DistributionItem,
@@ -30,6 +31,10 @@ export const analyticsApi = {
   },
   aspects: async (): Promise<AspectItem[]> => {
     const { data } = await api.get('/api/analytics/aspects')
+    return data
+  },
+  categories: async (): Promise<CategoryItem[]> => {
+    const { data } = await api.get('/api/analytics/categories')
     return data
   },
   sources: async (): Promise<SourceItem[]> => {
