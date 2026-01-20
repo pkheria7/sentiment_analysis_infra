@@ -2,10 +2,13 @@ import json
 from google import genai
 from google.genai import types
 from app.services.llm.prompts import SYSTEM_PROMPT, build_user_prompt
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Initialize the Gemini Client
 # The API key is obtained from Google AI Studio
-client = genai.Client(api_key="AIzaSyA4yFgXh7p7pXe3D86igUAAcy6xUN4VFyE")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def analyze_text_with_llm(text: str) -> dict | None:
     try:

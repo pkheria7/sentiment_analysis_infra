@@ -1,0 +1,42 @@
+@import "tailwindcss";
+:root {
+  color-scheme: light;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08), transparent 25%),
+    radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.1), transparent 28%),
+    #f1f5f9;
+  color: #1e293b;
+}
+#root {
+  min-height: 100vh;
+}
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(14px);
+}
+.heading {
+  background: linear-gradient(120deg, #2563eb, #059669);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+}
