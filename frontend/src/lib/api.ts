@@ -6,6 +6,7 @@ import type {
   DistributionItem,
   IngestPayload,
   LanguageItem,
+  LocationSentimentPoint,
   ProcessResponse,
   SourceItem,
   Summary,
@@ -47,6 +48,14 @@ export const analyticsApi = {
     const { data } = await api.get('/api/analytics/content', {
       params: filters,
     })
+    return data
+  },
+  positiveByLocation: async (): Promise<LocationSentimentPoint[]> => {
+    const { data } = await api.get('/api/analytics/positive-locations')
+    return data
+  },
+  negativeByLocation: async (): Promise<LocationSentimentPoint[]> => {
+    const { data } = await api.get('/api/analytics/negative-locations')
     return data
   },
 }

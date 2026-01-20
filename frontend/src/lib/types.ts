@@ -30,6 +30,11 @@ export interface TrendPoint {
   count: number
 }
 
+export interface LocationSentimentPoint {
+  location: string
+  count: number
+}
+
 export interface ContentRow {
   id: number
   source: string

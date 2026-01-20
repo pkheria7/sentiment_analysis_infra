@@ -137,3 +137,31 @@ def content_table(
     ]
 
 
+@router.get("/positive-locations")
+def positive_feedback_by_location(db: Session = Depends(get_db)):
+    data = (
+        db.query(Content.location_name, func.count(Content.id))
+        .filter(Content.is_processed == True, Content.sentiment == "Positive")
+        .filter(Content.location_name != None)
+        .group_by(Content.location_name)
+        .order_by(func.count(Content.id).desc())
+        .all()
+    )
+
+    return [{"aspect": k, "count": v} for k, v in data]
+
+
+@router.get("/negative-locations")
+def negative_feedback_by_location(db: Session = Depends(get_db)):
+    data = (
+        db.query(Content.location_name, func.count(Content.id))
+        .filter(Content.is_processed == True, Content.sentiment == "Negative")
+        .filter(Content.location_name != None)
+        .group_by(Content.location_name)
+        .order_by(func.count(Content.id).desc())
+        .all()
+    )
+
+    return [{"aspect": k, "count": v} for k, v in data]
+
+

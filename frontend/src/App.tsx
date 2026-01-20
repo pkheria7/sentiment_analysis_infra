@@ -1,5 +1,4 @@
-import type React from 'react'
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -77,7 +76,6 @@ function ContentTable({ data, isLoading }: { data: ContentRow[] | undefined; isL
               <th className="px-4 py-3 font-semibold">Aspect</th>
               <th className="px-4 py-3 font-semibold">Language</th>
               <th className="px-4 py-3 font-semibold">Excerpt</th>
-              <th className="px-4 py-3 font-semibold">Timestamp</th>
               <th className="px-4 py-3 font-semibold">Location</th>
             </tr>
           </thead>
@@ -125,7 +123,6 @@ function ContentTable({ data, isLoading }: { data: ContentRow[] | undefined; isL
                     {row.translated_text ?? row.original_text}
                   </p>
                 </td>
-                <td className="px-4 py-3 text-xs text-slate-500">{row.timestamp ?? '—'}</td>
                 <td className="px-4 py-3 text-xs text-slate-500">{row.location ?? '—'}</td>
               </tr>
             ))}
@@ -171,6 +168,16 @@ function App() {
   const { data: trendData, isLoading: trendsLoading } = useQuery<TrendPoint[]>({
     queryKey: ['analytics', 'trends'],
     queryFn: analyticsApi.trends,
+  })
+
+  const { data: positiveLocations, isLoading: positiveLoading } = useQuery<AspectItem[]>({
+    queryKey: ['analytics', 'positive-locations'],
+    queryFn: analyticsApi.positiveByLocation,
+  })
+
+  const { data: negativeLocations, isLoading: negativeLoading } = useQuery<AspectItem[]>({
+    queryKey: ['analytics', 'negative-locations'],
+    queryFn: analyticsApi.negativeByLocation,
   })
 
   const contentFilters: ContentFilters = useMemo(
@@ -327,10 +334,235 @@ function App() {
                       contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       labelStyle={{ color: '#1e293b' }}
                     />
-                    <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2.5} dot />
+                    <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
+            </div>
+          </Card>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <Card title="Positive feedback by location" subtitle="Cities with highest positive sentiment">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {/* Heatmap */}
+                <div className="relative w-96 h-96 border-2 border-green-300 rounded-lg overflow-visible">
+                  {/* Background Gradient - Green & Neon */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-green-900 via-green-600 to-lime-300 opacity-70 rounded-lg"></div>
+
+                  {/* Grid Lines */}
+                  {[1, 2, 3, 4].map((i) => (
+                    <React.Fragment key={i}>
+                      <div
+                        className="absolute left-0 right-0 h-px bg-white opacity-30"
+                        style={{ bottom: `${i * 20}%` }}
+                      ></div>
+                      <div
+                        className="absolute top-0 bottom-0 w-px bg-white opacity-30"
+                        style={{ left: `${i * 20}%` }}
+                      ></div>
+                    </React.Fragment>
+                  ))}
+
+                  {/* Data Points */}
+                  {(positiveLocations ?? []).map((location, index) => {
+                    const counts = positiveLocations?.map(l => (l as any).count) ?? [1]
+                    const maxCount = Math.max(...counts)
+                    const minCount = Math.min(...counts)
+                    const range = maxCount - minCount || 1
+                    
+                    // Normalize count to 0-1 for color (0 = neon/light, 1 = green/dark)
+                    const intensity = ((location as any).count - minCount) / range
+                    
+                    // Color gradient: neon (low intensity) to dark green (high intensity)
+                    const hue = 120 // Green hue
+                    const saturation = 80 + intensity * 20 // 80-100%
+                    const lightness = 50 - intensity * 20 // 50-30% (darker for higher)
+                    const pointColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                    
+                    const totalPoints = positiveLocations?.length ?? 1
+                    const xPercent = ((index + 1) / (totalPoints + 1)) * 100
+                    const yPercent = ((location as any).count / maxCount) * 100
+                    
+                    return (
+                      <div
+                        key={`${location.aspect}-${index}`}
+                        className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 z-10 group"
+                        style={{
+                          left: `${xPercent}%`,
+                          bottom: `${Math.max(5, yPercent)}%`,
+                        }}
+                      >
+                        <div 
+                          className="w-7 h-7 rounded-full border-2 border-white shadow-lg hover:scale-150 transition-all duration-200"
+                          style={{
+                            backgroundColor: pointColor,
+                            boxShadow: `0 0 12px ${pointColor}, 0 0 24px ${pointColor}80`
+                          }}
+                        ></div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black border border-white rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          {location.aspect}: {(location as any).count}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {/* Axis Labels */}
+                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-lime-300 font-semibold text-sm z-30">
+                    Cities →
+                  </div>
+                  <div className="absolute -left-14 top-1/2 transform -translate-y-1/2 -rotate-90 text-lime-300 font-semibold text-sm whitespace-nowrap z-30">
+                    Count →
+                  </div>
+                </div>
+
+                {/* Legend and Stats */}
+                <div className="flex-1 min-h-96 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-lime-300 rounded-lg p-4 overflow-y-auto max-h-96 flex flex-col">
+                  <h4 className="text-green-700 font-bold text-sm mb-3 sticky top-0 bg-gradient-to-r from-slate-50 to-slate-100 pb-2">All Positive Cities ({positiveLocations?.length ?? 0})</h4>
+                  <div className="space-y-2 flex-1">
+                    {(positiveLocations ?? []).map((location, idx) => {
+                      const counts = positiveLocations?.map(l => (l as any).count) ?? [1]
+                      const maxCount = Math.max(...counts)
+                      const minCount = Math.min(...counts)
+                      const range = maxCount - minCount || 1
+                      const intensity = ((location as any).count - minCount) / range
+                      const hue = 120
+                      const saturation = 80 + intensity * 20
+                      const lightness = 50 - intensity * 20
+                      const pointColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                      
+                      return (
+                        <div key={`${location.aspect}-${idx}`} className="flex items-center justify-between text-xs bg-white p-2 rounded border border-slate-200 hover:bg-lime-50 transition-colors">
+                          <span className="text-slate-900 font-medium">{idx + 1}. {location.aspect}</span>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="h-3 w-3 rounded-full border border-white"
+                              style={{ backgroundColor: pointColor }}
+                            ></div>
+                            <span className="text-green-700 font-bold w-8 text-right">{(location as any).count}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {!positiveLocations?.length && (
+                    <p className="text-slate-400 text-center mt-20">No positive feedback data yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Negative feedback by location" subtitle="Cities with highest negative sentiment">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                {/* Heatmap */}
+                <div className="relative w-96 h-96 border-2 border-red-400 rounded-lg overflow-visible">
+                  {/* Background Gradient - Red & Yellow */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-red-900 via-red-600 to-yellow-400 opacity-70 rounded-lg"></div>
+
+                  {/* Grid Lines */}
+                  {[1, 2, 3, 4].map((i) => (
+                    <React.Fragment key={i}>
+                      <div
+                        className="absolute left-0 right-0 h-px bg-white opacity-30"
+                        style={{ bottom: `${i * 20}%` }}
+                      ></div>
+                      <div
+                        className="absolute top-0 bottom-0 w-px bg-white opacity-30"
+                        style={{ left: `${i * 20}%` }}
+                      ></div>
+                    </React.Fragment>
+                  ))}
+
+                  {/* Data Points */}
+                  {(negativeLocations ?? []).map((location, index) => {
+                    const counts = negativeLocations?.map(l => (l as any).count) ?? [1]
+                    const maxCount = Math.max(...counts)
+                    const minCount = Math.min(...counts)
+                    const range = maxCount - minCount || 1
+                    
+                    // Normalize count to 0-1 for color (0 = yellow/light, 1 = red/dark)
+                    const intensity = ((location as any).count - minCount) / range
+                    
+                    // Color gradient: yellow (low intensity) to dark red (high intensity)
+                    // Yellow is 60 hue, Red is 0 hue
+                    const hue = 60 - intensity * 60 // 60 (yellow) to 0 (red)
+                    const saturation = 80 + intensity * 20 // 80-100%
+                    const lightness = 50 - intensity * 20 // 50-30% (darker for higher)
+                    const pointColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                    
+                    const totalPoints = negativeLocations?.length ?? 1
+                    const xPercent = ((index + 1) / (totalPoints + 1)) * 100
+                    const yPercent = ((location as any).count / maxCount) * 100
+                    
+                    return (
+                      <div
+                        key={`${location.aspect}-${index}`}
+                        className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 z-10 group"
+                        style={{
+                          left: `${xPercent}%`,
+                          bottom: `${Math.max(5, yPercent)}%`,
+                        }}
+                      >
+                        <div 
+                          className="w-7 h-7 rounded-full border-2 border-white shadow-lg hover:scale-150 transition-all duration-200"
+                          style={{
+                            backgroundColor: pointColor,
+                            boxShadow: `0 0 12px ${pointColor}, 0 0 24px ${pointColor}80`
+                          }}
+                        ></div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black border border-white rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          {location.aspect}: {(location as any).count}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {/* Axis Labels */}
+                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-yellow-400 font-semibold text-sm z-30">
+                    Cities →
+                  </div>
+                  <div className="absolute -left-14 top-1/2 transform -translate-y-1/2 -rotate-90 text-yellow-400 font-semibold text-sm whitespace-nowrap z-30">
+                    Count →
+                  </div>
+                </div>
+
+                {/* Legend and Stats */}
+                <div className="flex-1 min-h-96 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-red-400 rounded-lg p-4 overflow-y-auto max-h-96 flex flex-col">
+                  <h4 className="text-red-700 font-bold text-sm mb-3 sticky top-0 bg-gradient-to-r from-slate-50 to-slate-100 pb-2">All Negative Cities ({negativeLocations?.length ?? 0})</h4>
+                  <div className="space-y-2 flex-1">
+                    {(negativeLocations ?? []).map((location, idx) => {
+                      const counts = negativeLocations?.map(l => (l as any).count) ?? [1]
+                      const maxCount = Math.max(...counts)
+                      const minCount = Math.min(...counts)
+                      const range = maxCount - minCount || 1
+                      const intensity = ((location as any).count - minCount) / range
+                      const hue = 60 - intensity * 60
+                      const saturation = 80 + intensity * 20
+                      const lightness = 50 - intensity * 20
+                      const pointColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                      
+                      return (
+                        <div key={`${location.aspect}-${idx}`} className="flex items-center justify-between text-xs bg-white p-2 rounded border border-slate-200 hover:bg-red-50 transition-colors">
+                          <span className="text-slate-900 font-medium">{idx + 1}. {location.aspect}</span>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="h-3 w-3 rounded-full border border-white"
+                              style={{ backgroundColor: pointColor }}
+                            ></div>
+                            <span className="text-red-700 font-bold w-8 text-right">{(location as any).count}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {!negativeLocations?.length && (
+                    <p className="text-slate-400 text-center mt-20">No negative feedback data yet.</p>
+                  )}
+                </div>
+              </div>
             </div>
           </Card>
         </section>
