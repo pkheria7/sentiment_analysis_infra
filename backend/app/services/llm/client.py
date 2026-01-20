@@ -10,22 +10,20 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # The API key is obtained from Google AI Studio
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-def analyze_text_with_llm(text: str) -> dict | None:
+def analyze_batch_with_llm(texts: list[str]) -> list[dict] | None:
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 temperature=0.2,
-                # This ensures the output is valid JSON
-                response_mime_type="application/json" 
+                response_mime_type="application/json"
             ),
-            contents=build_user_prompt(text)
+            contents=build_user_prompt(texts)
         )
 
-        # Gemini's response.text will be a raw JSON string
         return json.loads(response.text)
-        
+
     except Exception as e:
         print(f"Error calling Gemini: {e}")
         return None

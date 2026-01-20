@@ -15,16 +15,33 @@ IMPORTANT:
 - Do NOT include explanations
 """
 
-def build_user_prompt(text: str) -> str:
-    return f"""
-Text:
-{text}
+def build_user_prompt(texts: list[str]) -> str:
+    items = "\n".join(
+        [f'{i+1}. "{text}"' for i, text in enumerate(texts)]
+    )
 
-Return JSON in the following format:
-{{
-  "detected_language": "<ISO-639 code or script-based label>",
-  "translated_text": "<English translation>",
-  "aspect": "<One of the predefined aspects>",
-  "sentiment": "<Positive | Negative | Neutral>"
-}}
+    return f"""
+You will receive a list of public feedback texts.
+
+Tasks for EACH text:
+1. Detect original language
+2. Translate to English
+3. Identify infrastructure aspect
+4. Determine sentiment
+
+Texts:
+{items}
+
+Return STRICT JSON as an ARRAY in the same order.
+
+Format:
+[
+  {{
+    "detected_language": "...",
+    "translated_text": "...",
+    "aspect": "...",
+    "sentiment": "..."
+  }}
+]
 """
+
