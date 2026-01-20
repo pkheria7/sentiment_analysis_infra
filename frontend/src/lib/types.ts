@@ -78,3 +78,13 @@ export interface ProcessResponse {
   status: string
   processed_records: number
 }
+
+export interface MitigationItem {
+  summary: string
+  highlighted_issues: string[]
+  recommendations: string[]
+}
+
+export interface MitigationSummary {
+  summary: MitigationItem[]
+}

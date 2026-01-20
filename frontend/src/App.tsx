@@ -16,7 +16,7 @@ import {
   YAxis,
 } from 'recharts'
 import { analyticsApi, ingestApi, processApi } from './lib/api'
-import type { ContentFilters, ContentRow, DistributionItem, LanguageItem, LocationSentimentPoint, SourceItem, Summary, TrendPoint, AspectItem, CategoryItem } from './lib/types'
+import type { ContentFilters, ContentRow, DistributionItem, LanguageItem, LocationSentimentPoint, SourceItem, Summary, TrendPoint, AspectItem, CategoryItem, MitigationSummary } from './lib/types'
 import Button from './components/ui/button'
 import Card from './components/ui/card'
 import Loader from './components/loader'
@@ -36,7 +36,7 @@ function formatConfidence(score?: number | null) {
 
 function StatBadge({ label, value }: { label: string; value: string | number | null }) {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-3 shadow-sm transition-transform hover:scale-105">
+    <div className="flex flex-col gap-1 rounded-2xl bg-linear-to-br from-slate-50 to-slate-100 px-4 py-3 shadow-sm transition-transform hover:scale-105">
       <span className="text-xs uppercase tracking-wide text-slate-500">{label}</span>
       <span className="text-lg font-semibold text-slate-900">{value ?? '—'}</span>
     </div>
@@ -77,7 +77,7 @@ function ContentTable({ data, isLoading }: { data: ContentRow[] | undefined; isL
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto scrollbar-thin">
         <table className="min-w-full text-sm">
-          <thead className="bg-gradient-to-r from-slate-50 to-slate-100 text-left text-slate-700">
+          <thead className="bg-linear-to-r from-slate-50 to-slate-100 text-left text-slate-700">
             <tr>
               <th className="px-4 py-3 font-semibold">Source</th>
               <th className="px-4 py-3 font-semibold">Sentiment</th>
@@ -168,6 +168,7 @@ function App() {
   const [maxComments, setMaxComments] = useState(50)
   const [processLimit, setProcessLimit] = useState(20)
   const [redditUrl, setRedditUrl] = useState('')
+  const [mitigationUrl, setMitigationUrl] = useState('')
 
   const { data: summary, isLoading: summaryLoading } = useQuery<Summary>({
     queryKey: ['analytics', 'summary'],
@@ -259,6 +260,28 @@ function App() {
     },
     onError: (err: Error) => toast.error(err.message || 'Reddit ingestion failed'),
   })
+
+  const [mitigationData, setMitigationData] = useState<MitigationSummary | null>(null)
+  const [mitigationLoading, setMitigationLoading] = useState(false)
+
+  const handleMitigationFetch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!mitigationUrl) {
+      toast.error('Add a YouTube or Reddit URL')
+      return
+    }
+    setMitigationLoading(true)
+    try {
+      const result = await processApi.summary(mitigationUrl)
+      setMitigationData(result)
+      toast.success('AI mitigation report generated')
+    } catch (err) {
+      toast.error((err as Error).message || 'Failed to fetch mitigation summary')
+      setMitigationData(null)
+    } finally {
+      setMitigationLoading(false)
+    }
+  }
 
   const processMutation = useMutation({
     mutationFn: (limit: number) => processApi.run(limit),
@@ -368,7 +391,7 @@ function App() {
   }, [content])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-rose-50/40 text-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-white via-orange-50/30 to-rose-50/40 text-slate-900">
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-10 md:px-10">
         <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
@@ -700,7 +723,7 @@ function App() {
                 <div className="relative w-96 h-96 pl-16 pb-10">
                   <div className="relative w-full h-full border-2 border-green-300 rounded-lg overflow-hidden">
                     {/* Background Gradient - Green & Neon */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-green-900 via-green-600 to-lime-300 opacity-70 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-linear-to-tr from-green-900 via-green-600 to-lime-300 opacity-70 rounded-lg"></div>
 
                     {/* Grid Lines */}
                     {[1, 2, 3, 4].map((i) => (
@@ -773,8 +796,8 @@ function App() {
                 </div>
 
                 {/* Legend and Stats */}
-                <div className="flex-1 min-h-96 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-lime-300 rounded-lg p-4 overflow-y-auto max-h-96 flex flex-col">
-                  <h4 className="text-green-700 font-bold text-sm mb-3 sticky top-0 bg-gradient-to-r from-slate-50 to-slate-100 pb-2">All Positive Cities ({positiveLocations?.length ?? 0})</h4>
+                <div className="flex-1 min-h-96 bg-linear-to-br from-slate-50 to-slate-100 border-2 border-lime-300 rounded-lg p-4 overflow-y-auto max-h-96 flex flex-col">
+                  <h4 className="text-green-700 font-bold text-sm mb-3 sticky top-0 bg-linear-to-r from-slate-50 to-slate-100 pb-2">All Positive Cities ({positiveLocations?.length ?? 0})</h4>
                   <div className="space-y-2 flex-1">
                     {(positiveLocations ?? []).map((location: LocationSentimentPoint, idx: number) => {
                       const counts = positiveLocations?.map((l) => l.count ?? 0) ?? [1]
@@ -817,7 +840,7 @@ function App() {
                 <div className="relative w-96 h-96 pl-16 pb-10">
                   <div className="relative w-full h-full border-2 border-red-400 rounded-lg overflow-hidden">
                     {/* Background Gradient - Red & Yellow */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-red-900 via-red-600 to-yellow-400 opacity-70 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-linear-to-tr from-red-900 via-red-600 to-yellow-400 opacity-70 rounded-lg"></div>
 
                     {/* Grid Lines */}
                     {[1, 2, 3, 4].map((i) => (
@@ -891,8 +914,8 @@ function App() {
                 </div>
 
                 {/* Legend and Stats */}
-                <div className="flex-1 min-h-96 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-red-400 rounded-lg p-4 overflow-y-auto max-h-96 flex flex-col">
-                  <h4 className="text-red-700 font-bold text-sm mb-3 sticky top-0 bg-gradient-to-r from-slate-50 to-slate-100 pb-2">All Negative Cities ({negativeLocations?.length ?? 0})</h4>
+                <div className="flex-1 min-h-96 bg-linear-to-br from-slate-50 to-slate-100 border-2 border-red-400 rounded-lg p-4 overflow-y-auto max-h-96 flex flex-col">
+                  <h4 className="text-red-700 font-bold text-sm mb-3 sticky top-0 bg-linear-to-r from-slate-50 to-slate-100 pb-2">All Negative Cities ({negativeLocations?.length ?? 0})</h4>
                   <div className="space-y-2 flex-1">
                     {(negativeLocations ?? []).map((location: LocationSentimentPoint, idx: number) => {
                       const counts = negativeLocations?.map((l) => l.count ?? 0) ?? [1]
@@ -1188,6 +1211,137 @@ function App() {
             </form>
           </Card>
         </section>
+
+        <Card title="🤖 AI Mitigation Advisor" subtitle="Get intelligent recommendations based on feedback analysis">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <form className="grid gap-3" onSubmit={handleMitigationFetch}>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs uppercase tracking-wide text-slate-600">YouTube or Reddit URL</label>
+                  <input
+                    value={mitigationUrl}
+                    onChange={(e) => setMitigationUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/... or reddit.com/..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 hover:border-slate-300"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" loading={mitigationLoading}>
+                    Generate AI Report
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setMitigationUrl('')
+                      setMitigationData(null)
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </form>
+              <div className="mt-4 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 p-4 text-xs text-slate-700 border border-purple-200">
+                <p className="font-semibold text-purple-800 mb-2">💡 What this does:</p>
+                <ul className="space-y-1 list-disc list-inside">
+                  <li>Analyzes all feedback from the URL</li>
+                  <li>Identifies recurring issues</li>
+                  <li>Provides AI-generated mitigation strategies</li>
+                  <li>Highlights critical concerns</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              {mitigationLoading && (
+                <div className="flex h-full min-h-[300px] items-center justify-center">
+                  <Loader />
+                  <p className="ml-3 text-sm text-slate-600">AI analyzing feedback...</p>
+                </div>
+              )}
+
+              {!mitigationLoading && !mitigationData && (
+                <div className="flex h-full min-h-[300px] items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50">
+                  <div className="text-center">
+                    <div className="text-4xl mb-3">🎯</div>
+                    <p className="text-sm text-slate-600">Enter a URL and click "Generate AI Report"</p>
+                    <p className="text-xs text-slate-500 mt-1">to get intelligent mitigation recommendations</p>
+                  </div>
+                </div>
+              )}
+
+              {!mitigationLoading && mitigationData && mitigationData.summary && mitigationData.summary.length > 0 && (
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
+                  {mitigationData.summary.map((item, index) => (
+                    <div key={index} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+                      {/* Summary */}
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                            📊
+                          </div>
+                          <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wide">Analysis Summary</h4>
+                        </div>
+                        <p className="text-sm text-slate-700 leading-relaxed pl-10">{item.summary}</p>
+                      </div>
+
+                      {/* Highlighted Issues */}
+                      {item.highlighted_issues && item.highlighted_issues.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                              ⚠️
+                            </div>
+                            <h4 className="font-bold text-red-700 text-sm uppercase tracking-wide">Critical Issues</h4>
+                          </div>
+                          <ul className="space-y-2 pl-10">
+                            {item.highlighted_issues.map((issue, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                                <span className="inline-block mt-1 h-1.5 w-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
+                                <span>{issue}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Recommendations */}
+                      {item.recommendations && item.recommendations.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                              ✅
+                            </div>
+                            <h4 className="font-bold text-green-700 text-sm uppercase tracking-wide">Recommended Actions</h4>
+                          </div>
+                          <ul className="space-y-2 pl-10">
+                            {item.recommendations.map((rec, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                                <span className="inline-block mt-1 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
+                                <span>{rec}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!mitigationLoading && mitigationData && (!mitigationData.summary || mitigationData.summary.length === 0) && (
+                <div className="flex h-full min-h-[300px] items-center justify-center rounded-xl border border-amber-200 bg-amber-50">
+                  <div className="text-center p-6">
+                    <div className="text-4xl mb-3">📭</div>
+                    <p className="text-sm text-amber-800 font-semibold">No Analysis Available</p>
+                    <p className="text-xs text-amber-700 mt-1">The provided URL may not have enough feedback data to analyze.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
 
         <Card
           title="Content"

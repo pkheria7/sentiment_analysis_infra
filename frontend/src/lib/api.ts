@@ -8,6 +8,7 @@ import type {
   IngestPayload,
   LanguageItem,
   LocationSentimentPoint,
+  MitigationSummary,
   ProcessResponse,
   SourceItem,
   Summary,
@@ -81,6 +82,12 @@ export const ingestApi = {
 export const processApi = {
   run: async (limit = 20): Promise<ProcessResponse> => {
     const { data } = await api.post('/api/process', null, { params: { limit } })
+    return data
+  },
+  summary: async (source: string): Promise<MitigationSummary> => {
+    const { data } = await api.get('/api/process/summary', {
+      params: { source },
+    })
     return data
   },
 }
