@@ -8,6 +8,7 @@ router = APIRouter()
 @router.post("/api/ingest/reddit", tags=["Reddit Ingestion"])
 def ingest_reddit(
     post_url: str = Query(..., description="Full Reddit post URL"),
+    location_name: str = Query(None, description="Optional location name associated with the post"),
     db: Session = Depends(get_db)
 ):
     """

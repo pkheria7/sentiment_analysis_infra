@@ -5,7 +5,7 @@ HEADERS = {
     "User-Agent": "infra-sentiment-analysis/1.0"
 }
 
-def ingest_reddit_post(post_url):
+def ingest_reddit_post(post_url, location_name="Mumbai"):
     if not post_url.endswith(".json"):
         post_url = post_url.rstrip("/") + ".json"
 
@@ -59,7 +59,7 @@ def ingest_reddit_post(post_url):
 
                     # Context
                     "timestamp": str(data.get("created_utc")),
-                    "location_name": None,
+                    "location_name": "Kolkata",
 
                     "raw_metadata": {
                         "author": data.get("author"),

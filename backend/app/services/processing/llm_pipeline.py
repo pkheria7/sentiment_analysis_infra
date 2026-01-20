@@ -4,7 +4,7 @@ from app.models.content import Content
 from app.services.llm.client import analyze_batch_with_llm
 
 
-BATCH_SIZE = 5
+BATCH_SIZE = 20
 
 
 def process_unprocessed_content(db: Session):
