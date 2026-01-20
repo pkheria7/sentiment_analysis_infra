@@ -19,7 +19,7 @@
 
 
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Boolean, Float
 from datetime import datetime
 from app.core.database import Base
 
@@ -41,7 +41,8 @@ class Content(Base):
     translated_text = Column(Text, nullable=True)
     aspect = Column(String, nullable=True)
     sentiment = Column(String, nullable=True)
-
+    category = Column(String, nullable=True)
+    confidence_score = Column(Float, nullable=True)
     # Status tracking
     is_processed = Column(Boolean, default=False)
     processed_at = Column(DateTime, nullable=True)
