@@ -340,9 +340,9 @@ function App() {
     count: item.count,
   }))
 
-  const languagePieData = (languageDistribution ?? []).slice(0, 6).map((item) => ({
+  const languageBarData = (languageDistribution ?? []).map((item) => ({
     name: item.language,
-    value: item.count,
+    count: item.count,
   }))
 
   const sourceBarData = (sourceDistribution ?? []).map((item) => ({
@@ -452,37 +452,43 @@ function App() {
             </div>
           </Card>
 
-          <Card title="Language Distribution" subtitle="Content by language">
-            <div className="h-72">
+          <Card title="Language Distribution" subtitle="Top 10 languages">
+            <div>
               {summaryLoading ? (
-                <div className="flex h-full items-center justify-center">
+                <div className="flex items-center justify-center py-12">
                   <Loader />
                 </div>
               ) : (
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie 
-                      data={languagePieData} 
-                      dataKey="value" 
-                      nameKey="name" 
-                      cx="50%" 
-                      cy="50%" 
-                      outerRadius={80}
-                      label={(entry) => entry.name}
-                    >
-                      {languagePieData.map((_entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={['#06b6d4', '#f59e0b', '#a855f7', '#10b981', '#ef4444', '#3b82f6'][index % 6]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      labelStyle={{ color: '#1e293b' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="max-h-72 overflow-y-auto scrollbar-thin">
+                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-gradient-to-r from-slate-50 to-slate-100 text-left text-slate-700 z-10">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Language</th>
+                          <th className="px-4 py-3 font-semibold text-right">Count</th>
+                          <th className="px-4 py-3 font-semibold text-right">%</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {languageBarData.map((lang, index) => {
+                          const totalCount = languageBarData.reduce((sum, l) => sum + l.count, 0)
+                          const percentage = totalCount > 0 ? ((lang.count / totalCount) * 100).toFixed(1) : '0.0'
+                          return (
+                            <tr key={`${lang.name}-${index}`} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 font-medium text-slate-900">{lang.name}</td>
+                              <td className="px-4 py-3 text-right text-slate-700">{lang.count}</td>
+                              <td className="px-4 py-3 text-right">
+                                <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-semibold text-cyan-800">
+                                  {percentage}%
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
             </div>
           </Card>
