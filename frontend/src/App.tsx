@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import React, { useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   Bar,
@@ -15,11 +15,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { analyticsApi, ingestApi, processApi } from './lib/api'
-import type { ContentFilters, ContentRow, DistributionItem, LanguageItem, LocationSentimentPoint, SourceItem, Summary, TrendPoint, AspectItem, CategoryItem, MitigationSummary } from './lib/types'
+import Loader from './components/loader'
 import Button from './components/ui/button'
 import Card from './components/ui/card'
-import Loader from './components/loader'
+import { analyticsApi, ingestApi, processApi } from './lib/api'
+import type { AspectItem, CategoryItem, ContentFilters, ContentRow, DistributionItem, LanguageItem, LocationSentimentPoint, MitigationSummary, SourceItem, Summary, TrendPoint } from './lib/types'
 
 const sentimentPalette: Record<string, string> = {
   Positive: '#10b981',
@@ -1271,66 +1271,64 @@ function App() {
                 </div>
               )}
 
-              {!mitigationLoading && mitigationData && mitigationData.summary && mitigationData.summary.length > 0 && (
+              {!mitigationLoading && mitigationData && mitigationData.summary && mitigationData.summary.summary && (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
-                  {mitigationData.summary.map((item, index) => (
-                    <div key={index} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-                      {/* Summary */}
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+                    {/* Summary */}
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                          📊
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wide">Analysis Summary</h4>
+                      </div>
+                      <p className="text-sm text-slate-700 leading-relaxed pl-10">{mitigationData.summary.summary}</p>
+                    </div>
+
+                    {/* Highlighted Issues */}
+                    {mitigationData.summary.highlighted_issues && mitigationData.summary.highlighted_issues.length > 0 && (
                       <div className="mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                            📊
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                            ⚠️
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wide">Analysis Summary</h4>
+                          <h4 className="font-bold text-red-700 text-sm uppercase tracking-wide">Critical Issues</h4>
                         </div>
-                        <p className="text-sm text-slate-700 leading-relaxed pl-10">{item.summary}</p>
+                        <ul className="space-y-2 pl-10">
+                          {mitigationData.summary.highlighted_issues.map((issue, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                              <span className="inline-block mt-1 h-1.5 w-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
+                              <span>{issue}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
+                    )}
 
-                      {/* Highlighted Issues */}
-                      {item.highlighted_issues && item.highlighted_issues.length > 0 && (
-                        <div className="mb-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                              ⚠️
-                            </div>
-                            <h4 className="font-bold text-red-700 text-sm uppercase tracking-wide">Critical Issues</h4>
+                    {/* Recommendations */}
+                    {mitigationData.summary.recommendations && mitigationData.summary.recommendations.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                            ✅
                           </div>
-                          <ul className="space-y-2 pl-10">
-                            {item.highlighted_issues.map((issue, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
-                                <span className="inline-block mt-1 h-1.5 w-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
-                                <span>{issue}</span>
-                              </li>
-                            ))}
-                          </ul>
+                          <h4 className="font-bold text-green-700 text-sm uppercase tracking-wide">Recommended Actions</h4>
                         </div>
-                      )}
-
-                      {/* Recommendations */}
-                      {item.recommendations && item.recommendations.length > 0 && (
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
-                              ✅
-                            </div>
-                            <h4 className="font-bold text-green-700 text-sm uppercase tracking-wide">Recommended Actions</h4>
-                          </div>
-                          <ul className="space-y-2 pl-10">
-                            {item.recommendations.map((rec, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
-                                <span className="inline-block mt-1 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
-                                <span>{rec}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        <ul className="space-y-2 pl-10">
+                          {mitigationData.summary.recommendations.map((rec, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                              <span className="inline-block mt-1 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {!mitigationLoading && mitigationData && (!mitigationData.summary || mitigationData.summary.length === 0) && (
+              {!mitigationLoading && mitigationData && (!mitigationData.summary || !mitigationData.summary.summary) && (
                 <div className="flex h-full min-h-[300px] items-center justify-center rounded-xl border border-amber-200 bg-amber-50">
                   <div className="text-center p-6">
                     <div className="text-4xl mb-3">📭</div>

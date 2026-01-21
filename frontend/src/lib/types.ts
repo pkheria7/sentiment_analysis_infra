@@ -86,5 +86,5 @@ export interface MitigationItem {
 }
 
 export interface MitigationSummary {
-  summary: MitigationItem[]
+  summary: MitigationItem
 }

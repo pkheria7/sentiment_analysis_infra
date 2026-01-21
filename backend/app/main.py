@@ -3,6 +3,7 @@ from app.api.routers import youtube
 from app.api.routers import processing
 from app.api.routers import analytics
 from app.api.routers import reddit
+from app.api.routers import manage_database
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Infrastructure Sentiment Backend")
@@ -18,3 +19,4 @@ app.include_router(youtube.router)
 app.include_router(reddit.router)
 app.include_router(processing.router)
 app.include_router(analytics.router)
+app.include_router(manage_database.router)
