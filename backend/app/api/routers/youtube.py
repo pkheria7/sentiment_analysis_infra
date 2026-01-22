@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.ingestion.youtube import ingest_youtube_video
 from pydantic import BaseModel, HttpUrl
+from app.services.processing.youtube_summary import get_youtube_summary
 
 router = APIRouter(prefix="/api/ingest/youtube", tags=["YouTube Ingestion"])
 
@@ -34,3 +35,21 @@ def ingest_youtube(
         "video_url": payload.video_url,
         "comments_ingested": count
     }
+
+
+
+
+
+# router = APIRouter(prefix="/youtube", tags=["YouTube"])
+
+
+# class YouTubeSummaryRequest(BaseModel):
+#     video_url: str
+
+
+# @router.post("/summary")
+# def youtube_video_summary(payload: YouTubeSummaryRequest):
+#     try:
+#         return get_youtube_summary(payload.video_url)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
